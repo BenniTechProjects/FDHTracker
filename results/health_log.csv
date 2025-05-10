@@ -1,0 +1,7 @@
+Timestamp,DeviceName,IP,Type,Location,Status,Latency_ms
+2025-05-09 21:28:43,Cart-01,192.168.1.10,Mobile Cart,2nd Floor ICU,Offline,
+2025-05-09 21:28:43,Zebra-01,192.168.1.11,Label Printer,Lab Room 3,Offline,
+2025-05-09 21:29:45,Cart-01,192.168.1.10,Mobile Cart,2nd Floor ICU,Offline,
+2025-05-09 21:29:45,Zebra-01,192.168.1.11,Label Printer,Lab Room 3,Offline,
+2025-05-09 21:30:47,Cart-01,192.168.1.10,Mobile Cart,2nd Floor ICU,Offline,
+2025-05-09 21:30:47,Zebra-01,192.168.1.11,Label Printer,Lab Room 3,Offline,

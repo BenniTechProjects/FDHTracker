@@ -1,0 +1,3 @@
+DeviceName,IP,Type,Location
+Cart-01,192.168.1.10,Mobile Cart,2nd Floor ICU
+Zebra-01,192.168.1.11,Label Printer,Lab Room 3

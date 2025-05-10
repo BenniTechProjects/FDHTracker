@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Device Health Dashboard</title>
+    <meta http-equiv="refresh" content="60">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        .search-box { max-width: 300px; }
+        .filter-buttons .btn { margin-right: 10px; margin-bottom: 10px; }
+    </style>
+</head>
+<body class="bg-dark text-light">
+    <div class="container mt-4">
+        <h2>Field Device Health Dashboard</h2>
+
+        <!-- Search -->
+        <input type="text" id="searchInput" class="form-control search-box mt-3 mb-3" placeholder="Search devices...">
+
+        <!-- Filters -->
+        <div class="filter-buttons mb-3">
+            <button class="btn btn-outline-light" onclick="filterStatus('All')">All</button>
+            <button class="btn btn-success" onclick="filterStatus('Online')">Online</button>
+            <button class="btn btn-danger" onclick="filterStatus('Offline')">Offline</button>
+            <button class="btn btn-warning" onclick="filterStatus('Error')">Error</button>
+            <button class="btn btn-info" onclick="downloadCSV()">Download CSV</button>
+        </div>
+
+        <!-- Date Range -->
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label for="startDate">Start Date:</label>
+                <input type="date" id="startDate" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label for="endDate">End Date:</label>
+                <input type="date" id="endDate" class="form-control">
+            </div>
+        </div>
+
+        <!-- Table -->
+        <table class="table table-dark table-striped table-bordered" id="deviceTable">
+            <thead>
+                <tr>
+                    <th>Device Name</th>
+                    <th>IP</th>
+                    <th>Type</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Latency (ms)</th>
+                    <th>Last Checked</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for device in devices %}
+                <tr class="device-row {% if device['Status'] == 'Offline' %}table-danger{% elif device['Status'] == 'Online' %}table-success{% else %}table-warning{% endif %}">
+                    <td>{{ device['DeviceName'] }}</td>
+                    <td>{{ device['IP'] }}</td>
+                    <td>{{ device['Type'] }}</td>
+                    <td>{{ device['Location'] }}</td>
+                    <td class="status">{{ device['Status'] }}</td>
+                    <td>{{ device['Latency_ms'] or '---' }}</td>
+                    <td>{{ device['Timestamp'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById("searchInput");
+        const table = document.getElementById("deviceTable");
+        const rows = table.getElementsByTagName("tr");
+
+        searchInput.addEventListener("keyup", filterTable);
+        document.getElementById("startDate").addEventListener("change", filterTable);
+        document.getElementById("endDate").addEventListener("change", filterTable);
+
+        let currentStatusFilter = "All";
+
+        function filterTable() {
+            const filter = searchInput.value.toLowerCase();
+            for (let i = 1; i < rows.length; i++) {
+                const row = rows[i];
+                const cells = row.getElementsByTagName("td");
+                let match = false;
+                for (let j = 0; j < cells.length; j++) {
+                    if (cells[j].textContent.toLowerCase().includes(filter)) {
+                        match = true;
+                        break;
+                    }
+                }
+                const show = match && isVisibleByStatus(row) && isVisibleByDate(row);
+                row.style.display = show ? "" : "none";
+            }
+        }
+
+        function filterStatus(status) {
+            currentStatusFilter = status;
+            filterTable();
+        }
+
+        function isVisibleByStatus(row) {
+            const status = row.querySelector(".status").textContent;
+            return currentStatusFilter === "All" || status === currentStatusFilter;
+        }
+
+        function isVisibleByDate(row) {
+            const dateText = row.querySelectorAll("td")[6].textContent;
+            const rowDate = new Date(dateText);
+            const start = new Date(document.getElementById("startDate").value);
+            const end = new Date(document.getElementById("endDate").value);
+
+            if (!document.getElementById("startDate").value && !document.getElementById("endDate").value) return true;
+            if (document.getElementById("startDate").value && rowDate < start) return false;
+            if (document.getElementById("endDate").value && rowDate > end) return false;
+            return true;
+        }
+
+        function downloadCSV() {
+            const headers = Array.from(table.querySelectorAll("thead th")).map(th => th.textContent.trim());
+            const rowsData = [];
+
+            Array.from(table.querySelectorAll("tbody tr")).forEach(row => {
+                if (row.style.display !== "none") {
+                    const cells = Array.from(row.querySelectorAll("td")).map(td => td.textContent.trim());
+                    rowsData.push(cells);
+                }
+            });
+
+            let csvContent = [headers.join(",")].concat(rowsData.map(r => r.join(","))).join("\n");
+            const blob = new Blob([csvContent], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "filtered_devices.csv";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>
